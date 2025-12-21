@@ -1,0 +1,45 @@
+version: '3.8'
+
+services:
+  comfyui:
+    build: .
+    image: comfyui-runpod:latest
+    container_name: comfyui-dev
+
+    # GPU support
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+
+    # Ports
+    ports:
+      - "8188:8188"  # ComfyUI
+      - "8888:8888"  # Jupyter Lab
+      - "7860:7860"  # AI-Toolkit UI
+
+    # Volumes for persistent storage
+    volumes:
+      - ./workspace:/workspace
+      - ./models:/workspace/ComfyUI/models
+      - ./output:/workspace/ComfyUI/output
+      - ./training_data:/workspace/training_data
+
+    # Environment variables
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=all
+      - PYTORCH_CUDA_ALLOC_CONF=garbage_collection_threshold:0.6,max_split_size_mb:128
+      - CUDA_MODULE_LOADING=LAZY
+
+    # Restart policy
+    restart: unless-stopped
+
+    # Shared memory size (important for PyTorch)
+    shm_size: '8gb'
+
+    # Keep stdin open and allocate a pseudo-TTY
+    stdin_open: true
+    tty: true
