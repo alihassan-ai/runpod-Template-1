@@ -1,7 +1,8 @@
 # RunPod ComfyUI Template with AI-Toolkit and Video Extensions
 # Optimized for RTX 4090/5090
 
-FROM nvidia/cuda:12.1.1-cudnn8-devel-ubuntu22.04
+# Use pre-built PyTorch image to save build time and resources
+FROM runpod/pytorch:2.2.0-py3.10-cuda12.1.1-devel-ubuntu22.04
 
 ENV DEBIAN_FRONTEND=noninteractive
 ENV PYTHONUNBUFFERED=1
@@ -10,40 +11,14 @@ ENV SHELL=/bin/bash
 # Set working directory
 WORKDIR /workspace
 
-# Install system dependencies
+# Install additional system dependencies (git, wget, curl already in base image)
 RUN apt-get update && apt-get install -y \
-    git \
-    wget \
-    curl \
     vim \
     nano \
-    libgl1-mesa-glx \
-    libglib2.0-0 \
-    libsm6 \
-    libxext6 \
-    libxrender-dev \
-    libgomp1 \
-    libgoogle-perftools4 \
-    libtcmalloc-minimal4 \
-    python3.10 \
-    python3-pip \
-    python3.10-venv \
-    ffmpeg \
     libmagic1 \
     aria2 \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
-
-# Create symbolic links for python
-RUN ln -sf /usr/bin/python3.10 /usr/bin/python && \
-    ln -sf /usr/bin/pip3 /usr/bin/pip
-
-# Upgrade pip
-RUN pip install --no-cache-dir --upgrade pip setuptools wheel
-
-# Install PyTorch with CUDA 12.1 support (optimized for RTX 4090/5090)
-RUN pip install --no-cache-dir torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121 && \
-    rm -rf /root/.cache/pip
 
 # Install Jupyter for file management
 RUN pip install --no-cache-dir jupyter jupyterlab notebook && \
