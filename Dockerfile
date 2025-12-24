@@ -39,30 +39,34 @@ RUN ln -sf /usr/bin/python3.10 /usr/bin/python && \
     ln -sf /usr/bin/pip3 /usr/bin/pip
 
 # Upgrade pip
-RUN pip install --upgrade pip setuptools wheel
+RUN pip install --no-cache-dir --upgrade pip setuptools wheel
 
 # Install PyTorch with CUDA 12.1 support (optimized for RTX 4090/5090)
-RUN pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
+RUN pip install --no-cache-dir torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121 && \
+    rm -rf /root/.cache/pip
 
 # Install Jupyter for file management
-RUN pip install jupyter jupyterlab notebook
+RUN pip install --no-cache-dir jupyter jupyterlab notebook && \
+    rm -rf /root/.cache/pip
 
 # Clone ComfyUI
 RUN git clone https://github.com/comfyanonymous/ComfyUI.git /workspace/ComfyUI
 
 # Install ComfyUI dependencies
 WORKDIR /workspace/ComfyUI
-RUN pip install -r requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt && \
+    rm -rf /root/.cache/pip
 
 # Install additional packages for video processing
-RUN pip install \
+RUN pip install --no-cache-dir \
     opencv-python \
     imageio \
     imageio-ffmpeg \
     av \
     moviepy \
     insightface \
-    onnxruntime-gpu
+    onnxruntime-gpu && \
+    rm -rf /root/.cache/pip
 
 # Install ComfyUI Manager
 RUN cd /workspace/ComfyUI/custom_nodes && \
