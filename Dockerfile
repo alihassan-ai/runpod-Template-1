@@ -24,6 +24,10 @@ RUN apt-get update && apt-get install -y \
 RUN pip install --no-cache-dir jupyter jupyterlab notebook && \
     rm -rf /root/.cache/pip
 
+# Install Gradio for model download manager
+RUN pip install --no-cache-dir gradio && \
+    rm -rf /root/.cache/pip
+
 # Clone ComfyUI
 RUN git clone https://github.com/comfyanonymous/ComfyUI.git /workspace/ComfyUI
 
@@ -51,10 +55,11 @@ RUN cd /workspace/ComfyUI/custom_nodes && \
 COPY scripts/install_custom_nodes.sh /workspace/scripts/
 COPY scripts/install_ai_toolkit.sh /workspace/scripts/
 COPY scripts/download_models.sh /workspace/scripts/
+COPY scripts/model_downloader.py /workspace/scripts/
 COPY scripts/start.sh /workspace/scripts/
 
 # Make scripts executable
-RUN chmod +x /workspace/scripts/*.sh
+RUN chmod +x /workspace/scripts/*.sh /workspace/scripts/model_downloader.py
 
 # Install custom nodes
 RUN bash /workspace/scripts/install_custom_nodes.sh
@@ -81,7 +86,7 @@ RUN mkdir -p /workspace/ComfyUI/user/default/workflows && \
     rm -rf /workspace/workflows_temp
 
 # Expose ports
-EXPOSE 8188 8888 7860
+EXPOSE 8188 8888 7860 7861
 
 # Set environment variables for optimization
 ENV PYTORCH_CUDA_ALLOC_CONF=garbage_collection_threshold:0.6,max_split_size_mb:128
