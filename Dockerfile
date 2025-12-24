@@ -29,12 +29,16 @@ RUN pip install --no-cache-dir gradio && \
     rm -rf /root/.cache/pip
 
 # Clone ComfyUI
-RUN git clone https://github.com/comfyanonymous/ComfyUI.git /workspace/ComfyUI
+RUN git clone --depth 1 https://github.com/comfyanonymous/ComfyUI.git /workspace/ComfyUI && \
+    cd /workspace/ComfyUI && \
+    rm -rf .git
 
 # Install ComfyUI dependencies
 WORKDIR /workspace/ComfyUI
 RUN pip install --no-cache-dir -r requirements.txt && \
-    rm -rf /root/.cache/pip
+    rm -rf /root/.cache/pip && \
+    find /usr/local/lib/python3.10/dist-packages -type d -name "tests" -exec rm -rf {} + 2>/dev/null || true && \
+    find /usr/local/lib/python3.10/dist-packages -type d -name "test" -exec rm -rf {} + 2>/dev/null || true
 
 # Install additional packages for video processing
 RUN pip install --no-cache-dir \
@@ -45,11 +49,15 @@ RUN pip install --no-cache-dir \
     moviepy \
     insightface \
     onnxruntime-gpu && \
-    rm -rf /root/.cache/pip
+    rm -rf /root/.cache/pip && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 # Install ComfyUI Manager
 RUN cd /workspace/ComfyUI/custom_nodes && \
-    git clone https://github.com/ltdrdata/ComfyUI-Manager.git
+    git clone --depth 1 https://github.com/ltdrdata/ComfyUI-Manager.git && \
+    cd ComfyUI-Manager && \
+    rm -rf .git
 
 # Copy installation scripts
 COPY scripts/install_custom_nodes.sh /workspace/scripts/

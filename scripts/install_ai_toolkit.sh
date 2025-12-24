@@ -8,22 +8,17 @@ echo "========================================="
 cd /workspace
 
 # Clone AI-Toolkit
-if [ ! -d "ai-toolkit" ]; then
-    echo "Cloning AI-Toolkit repository..."
-    git clone https://github.com/ostris/ai-toolkit.git
-    cd ai-toolkit
-else
-    echo "AI-Toolkit already exists, updating..."
-    cd ai-toolkit
-    git pull
-fi
+echo "Cloning AI-Toolkit repository..."
+git clone --depth 1 https://github.com/ostris/ai-toolkit.git
+cd ai-toolkit
+rm -rf .git
 
 # Install AI-Toolkit dependencies
 echo "Installing AI-Toolkit dependencies..."
-pip install -r requirements.txt
+pip install --no-cache-dir -r requirements.txt
 
 # Install additional dependencies for Flux/SDXL training
-pip install -q \
+pip install --no-cache-dir -q \
     huggingface-hub \
     wandb \
     tensorboard \
@@ -31,6 +26,9 @@ pip install -q \
     lycoris-lora \
     peft \
     prodigyopt
+
+# Clean up pip cache
+rm -rf /root/.cache/pip
 
 # Create config directory
 mkdir -p /workspace/ai-toolkit/config
