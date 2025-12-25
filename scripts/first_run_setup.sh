@@ -46,6 +46,10 @@ pip install --no-cache-dir \
     insightface \
     onnxruntime-gpu 2>&1 | tee -a "$SETUP_LOG" || echo "⚠️ Some packages failed, continuing..." | tee -a "$SETUP_LOG"
 
+# Fix numpy version compatibility (opencv-python upgrades to 2.x which breaks scipy/ComfyUI)
+echo "🔧 Fixing numpy version compatibility..." | tee -a "$SETUP_LOG"
+pip install --no-cache-dir 'numpy<2.0' --force-reinstall 2>&1 | tee -a "$SETUP_LOG" || echo "⚠️ Numpy downgrade failed, continuing..." | tee -a "$SETUP_LOG"
+
 # Install ComfyUI Manager
 echo "📦 [4/5] Installing ComfyUI Manager..." | tee -a "$SETUP_LOG"
 cd /workspace/ComfyUI/custom_nodes
