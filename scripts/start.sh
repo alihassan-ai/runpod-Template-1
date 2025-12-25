@@ -83,12 +83,22 @@ start_model_downloader() {
     python model_downloader.py &
 }
 
-# Function to start AI-Toolkit web interface (if available)
+# Function to start AI-Toolkit web interface (if installed)
 start_ai_toolkit_ui() {
-    if [ -f "/workspace/ai-toolkit/app.py" ]; then
+    if [ -d "/workspace/ai-toolkit" ]; then
         echo "Starting AI-Toolkit UI on port 7861..."
         cd /workspace/ai-toolkit
-        python app.py --server-name 0.0.0.0 --server-port 7861 &
+        # Check for common UI files
+        if [ -f "app.py" ]; then
+            python app.py --server-name 0.0.0.0 --server-port 7861 &
+        elif [ -f "ui.py" ]; then
+            python ui.py --server-name 0.0.0.0 --server-port 7861 &
+        elif [ -f "webui.py" ]; then
+            python webui.py --server-name 0.0.0.0 --server-port 7861 &
+        else
+            # Try launching with gradio if available
+            python -c "import gradio; print('AI-Toolkit UI file not found')" 2>/dev/null || echo "AI-Toolkit not installed or no UI available"
+        fi
     fi
 }
 
@@ -102,16 +112,16 @@ display_info() {
 
     if [ -n "$RUNPOD_POD_ID" ]; then
         # Running on RunPod
-        echo "ComfyUI:          https://${RUNPOD_POD_ID}-8188.proxy.runpod.net"
-        echo "Jupyter:          https://${RUNPOD_POD_ID}-8888.proxy.runpod.net"
+        echo "ComfyUI:               https://${RUNPOD_POD_ID}-8188.proxy.runpod.net"
+        echo "Jupyter:               https://${RUNPOD_POD_ID}-8888.proxy.runpod.net"
         echo "Model & Nodes Manager: https://${RUNPOD_POD_ID}-7860.proxy.runpod.net"
-        echo "AI-Toolkit:       https://${RUNPOD_POD_ID}-7861.proxy.runpod.net"
+        echo "AI-Toolkit UI:         https://${RUNPOD_POD_ID}-7861.proxy.runpod.net"
     else
         # Local or other hosting
-        echo "ComfyUI:          http://localhost:8188"
-        echo "Jupyter:          http://localhost:8888"
+        echo "ComfyUI:               http://localhost:8188"
+        echo "Jupyter:               http://localhost:8888"
         echo "Model & Nodes Manager: http://localhost:7860"
-        echo "AI-Toolkit:       http://localhost:7861"
+        echo "AI-Toolkit UI:         http://localhost:7861"
     fi
 
     echo ""
@@ -121,14 +131,18 @@ display_info() {
     echo "1. Access Model & Nodes Manager (port 7860):"
     echo "   - Install custom nodes with one click!"
     echo "   - Download checkpoints, LoRAs, and models"
-    echo "2. Access ComfyUI to start generating images/videos"
-    echo "3. Use Jupyter to upload training images to /workspace/training_data/"
-    echo "4. Use AI-Toolkit UI for LoRA training (Flux/SDXL)"
+    echo "   - Install AI-Toolkit via the AI-Toolkit tab"
+    echo "2. Access ComfyUI (port 8188) to generate images/videos"
+    echo "3. Access AI-Toolkit UI (port 7861) for LoRA training"
+    echo "4. Use Jupyter (port 8888) to:"
+    echo "   - Upload training images to /workspace/training_data/"
+    echo "   - Manage files and run commands"
     echo ""
-    echo "Models directory: /workspace/ComfyUI/models/"
-    echo "Custom nodes:     /workspace/ComfyUI/custom_nodes/"
-    echo "Training data:    /workspace/training_data/"
-    echo "AI-Toolkit:       /workspace/ai-toolkit/"
+    echo "Directories:"
+    echo "  Models:        /workspace/ComfyUI/models/"
+    echo "  Custom nodes:  /workspace/ComfyUI/custom_nodes/"
+    echo "  Training data: /workspace/training_data/"
+    echo "  AI-Toolkit:    /workspace/ai-toolkit/"
     echo ""
     echo "========================================="
 }
