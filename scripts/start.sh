@@ -52,7 +52,7 @@ echo "✅ Numpy compatibility verified"
 start_jupyter() {
     echo "Starting Jupyter Lab on port 8888..."
     cd /workspace
-    jupyter lab \
+    nohup jupyter lab \
         --ip=0.0.0.0 \
         --port=8888 \
         --no-browser \
@@ -61,26 +61,29 @@ start_jupyter() {
         --ServerApp.password='' \
         --ServerApp.allow_origin='*' \
         --ServerApp.base_url="${JUPYTER_BASE_URL:-/}" \
-        &
+        > /workspace/jupyter.log 2>&1 &
+    echo "Jupyter started with PID $!"
 }
 
 # Function to start ComfyUI
 start_comfyui() {
     echo "Starting ComfyUI on port 8188..."
     cd /workspace/ComfyUI
-    python main.py \
+    nohup python main.py \
         --listen 0.0.0.0 \
         --port 8188 \
         --enable-cors-header \
         --preview-method auto \
-        &
+        > /workspace/comfyui.log 2>&1 &
+    echo "ComfyUI started with PID $!"
 }
 
 # Function to start Model & Custom Nodes Manager
 start_model_downloader() {
     echo "Starting Model & Custom Nodes Manager on port 7860..."
     cd /workspace/scripts
-    python model_downloader.py &
+    nohup python model_downloader.py > /workspace/model-manager.log 2>&1 &
+    echo "Model Manager started with PID $!"
 }
 
 # Function to start AI-Toolkit web interface (if installed)
@@ -88,17 +91,27 @@ start_ai_toolkit_ui() {
     if [ -d "/workspace/ai-toolkit" ]; then
         echo "Starting AI-Toolkit UI on port 7861..."
         cd /workspace/ai-toolkit
-        # Check for common UI files
+
+        # Try different UI file names with nohup for proper backgrounding
         if [ -f "app.py" ]; then
-            python app.py --server-name 0.0.0.0 --server-port 7861 &
+            nohup python app.py --server-name 0.0.0.0 --server-port 7861 > /workspace/ai-toolkit-ui.log 2>&1 &
+            echo "AI-Toolkit UI (app.py) started with PID $!"
         elif [ -f "ui.py" ]; then
-            python ui.py --server-name 0.0.0.0 --server-port 7861 &
+            nohup python ui.py --server-name 0.0.0.0 --server-port 7861 > /workspace/ai-toolkit-ui.log 2>&1 &
+            echo "AI-Toolkit UI (ui.py) started with PID $!"
         elif [ -f "webui.py" ]; then
-            python webui.py --server-name 0.0.0.0 --server-port 7861 &
+            nohup python webui.py --server-name 0.0.0.0 --server-port 7861 > /workspace/ai-toolkit-ui.log 2>&1 &
+            echo "AI-Toolkit UI (webui.py) started with PID $!"
+        elif [ -f "gradio_app.py" ]; then
+            nohup python gradio_app.py --server_name 0.0.0.0 --server_port 7861 > /workspace/ai-toolkit-ui.log 2>&1 &
+            echo "AI-Toolkit UI (gradio_app.py) started with PID $!"
         else
-            # Try launching with gradio if available
-            python -c "import gradio; print('AI-Toolkit UI file not found')" 2>/dev/null || echo "AI-Toolkit not installed or no UI available"
+            echo "⚠️  AI-Toolkit installed but no web UI file found (app.py, ui.py, webui.py, or gradio_app.py)"
+            echo "   Available files in /workspace/ai-toolkit:"
+            ls -la /workspace/ai-toolkit/*.py 2>/dev/null | head -10 || echo "   No Python files found"
         fi
+    else
+        echo "ℹ️  AI-Toolkit not installed. Install it via Model & Nodes Manager (port 7860)"
     fi
 }
 
