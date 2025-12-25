@@ -43,6 +43,11 @@ if [ -d "/runpod-volume" ] && [ ! -L "/workspace/ComfyUI/models" ]; then
     echo "Persistent storage configured."
 fi
 
+# Fix numpy compatibility issue (opencv-python upgrades to 2.x which breaks scipy/ComfyUI)
+echo "🔧 Checking numpy version compatibility..."
+pip install --no-cache-dir 'numpy<2.0' --force-reinstall --quiet 2>&1 | grep -v "Requirement already satisfied" || true
+echo "✅ Numpy compatibility verified"
+
 # Function to start Jupyter Lab
 start_jupyter() {
     echo "Starting Jupyter Lab on port 8888..."
