@@ -1,5 +1,4 @@
 #!/bin/bash
-set -e
 
 echo "========================================="
 echo "Installing ComfyUI Custom Nodes"
@@ -12,13 +11,19 @@ clone_node() {
     local repo=$1
     local dirname=$(basename $repo .git)
     echo "Installing $dirname..."
-    git clone --depth 1 $repo
-    cd $dirname
-    if [ -f requirements.txt ]; then
-        pip install --no-cache-dir -r requirements.txt 2>/dev/null || true
+
+    # Try to clone, continue if it fails
+    if git clone --depth 1 $repo 2>/dev/null; then
+        cd $dirname
+        if [ -f requirements.txt ]; then
+            pip install --no-cache-dir -r requirements.txt 2>/dev/null || true
+        fi
+        rm -rf .git
+        cd ..
+        echo "✓ $dirname installed successfully"
+    else
+        echo "⚠ Warning: Failed to clone $dirname, skipping..."
     fi
-    rm -rf .git
-    cd ..
 }
 
 # Essential Video and Image Processing Nodes
