@@ -1,23 +1,31 @@
 #!/bin/bash
-set -e
+set +e  # Don't exit on errors - continue even if issues occur
 
 echo "========================================="
 echo "Installing AI-Toolkit for LoRA Training"
 echo "========================================="
+echo "Installation will continue even if some steps fail"
+echo ""
 
 cd /workspace
 
 # Clone AI-Toolkit
 echo "Cloning AI-Toolkit repository..."
-git clone --depth 1 https://github.com/ostris/ai-toolkit.git
+git clone --depth 1 https://github.com/ostris/ai-toolkit.git || echo "⚠️ Clone failed, continuing..."
+if [ ! -d "ai-toolkit" ]; then
+    echo "❌ AI-Toolkit directory not found, installation failed"
+    exit 1
+fi
+
 cd ai-toolkit
 rm -rf .git
 
 # Install AI-Toolkit dependencies
 echo "Installing AI-Toolkit dependencies..."
-pip install --no-cache-dir -r requirements.txt
+pip install --no-cache-dir -r requirements.txt || echo "⚠️ Some dependencies failed, continuing..."
 
 # Install additional dependencies for Flux/SDXL training
+echo "Installing additional training dependencies..."
 pip install --no-cache-dir -q \
     huggingface-hub \
     wandb \
@@ -25,10 +33,10 @@ pip install --no-cache-dir -q \
     bitsandbytes \
     lycoris-lora \
     peft \
-    prodigyopt
+    prodigyopt || echo "⚠️ Some packages failed, continuing..."
 
 # Clean up pip cache
-rm -rf /root/.cache/pip
+rm -rf /root/.cache/pip || true
 
 # Create config directory
 mkdir -p /workspace/ai-toolkit/config

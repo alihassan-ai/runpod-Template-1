@@ -6,14 +6,18 @@ A fully pre-configured RunPod template for ComfyUI with AI-Toolkit for LoRA trai
 
 - **ComfyUI** with ComfyUI Manager pre-installed
 - **AI-Toolkit** for easy Flux/SDXL LoRA training via web UI
+- **Model & Nodes Manager** - One-click installation of custom nodes and easy model downloads
 - **Video Generation Nodes**: AnimateDiff, VideoHelperSuite, Frame Interpolation
-- **Essential Custom Nodes**: IPAdapter Plus, Impact Pack, ControlNet Aux, and more
+- **Essential Custom Nodes**: IPAdapter Plus, Impact Pack, ControlNet Aux, and more (install via UI)
 - **Jupyter Lab** for easy file management and uploads
-- **Auto-downloading** base models on first startup
+- **Fast Runtime Installation** - Custom nodes install quickly on RunPod's fast internet
 - **Persistent storage** support for RunPod network volumes
 - **Optimized** for RTX 4090/5090 with CUDA 12.1
+- **Smaller Docker Image** - Faster builds, faster deployments
 
-## Included Custom Nodes
+## Available Custom Nodes (Install via UI)
+
+Custom nodes are now installed at runtime through the Model & Nodes Manager interface. This provides faster deployments and uses RunPod's superior internet connection.
 
 ### Video & Animation
 - ComfyUI-VideoHelperSuite
@@ -118,7 +122,7 @@ docker push your-dockerhub-username/comfyui-runpod:latest
    - **Image Name**: `your-dockerhub-username/comfyui-runpod:latest`
    - **Docker Command**: (leave empty, uses CMD from Dockerfile)
    - **Container Disk**: `150 GB`
-   - **Expose HTTP Ports**: `8188, 8888, 7860`
+   - **Expose HTTP Ports**: `8188, 8888, 7860, 7861`
    - **Expose TCP Ports**: (leave empty)
 
 4. Click "Save Template"
@@ -141,9 +145,22 @@ Once deployed on RunPod, access your services at:
 
 - **ComfyUI**: `https://YOUR_POD_ID-8188.proxy.runpod.net`
 - **Jupyter Lab**: `https://YOUR_POD_ID-8888.proxy.runpod.net`
-- **AI-Toolkit**: `https://YOUR_POD_ID-7860.proxy.runpod.net` (if UI available)
+- **Model & Nodes Manager**: `https://YOUR_POD_ID-7860.proxy.runpod.net`
+- **AI-Toolkit**: `https://YOUR_POD_ID-7861.proxy.runpod.net` (if UI available)
 
 Replace `YOUR_POD_ID` with your actual pod ID from RunPod.
+
+### Installing Custom Nodes (First Time Setup)
+
+**IMPORTANT:** On first deployment, you need to install custom nodes:
+
+1. Open the **Model & Nodes Manager** at port 7860
+2. Go to the "Custom Nodes" tab
+3. Click the **"Install All Custom Nodes"** button
+4. Wait 5-15 minutes for installation to complete (monitor progress in real-time)
+5. Restart ComfyUI after installation completes
+
+This one-time setup installs all 17 custom nodes and their dependencies using RunPod's fast internet connection.
 
 ### Using ComfyUI
 
@@ -151,6 +168,28 @@ Replace `YOUR_POD_ID` with your actual pod ID from RunPod.
 2. Load a workflow or create your own
 3. Use ComfyUI Manager to install additional models
 4. Generate images/videos
+
+### Using Model & Nodes Manager
+
+The Model & Nodes Manager provides an easy web interface for managing your ComfyUI installation:
+
+#### Download Models Tab
+1. Paste any model URL (HuggingFace, CivitAI, etc.)
+2. Select the model type (Checkpoints, LoRAs, VAE, etc.)
+3. Optionally specify a custom filename
+4. Click Download
+5. Models are automatically saved to the correct directory
+
+#### Browse Models Tab
+- View all installed models by category
+- Check file sizes and manage your storage
+- Refresh to see newly downloaded models
+
+#### Custom Nodes Tab
+- **Install All Custom Nodes**: One-click installation of all 17 custom nodes
+- **Check Installation Status**: See which nodes are installed
+- Real-time progress monitoring during installation
+- Automatic dependency installation
 
 ### Training LoRAs with AI-Toolkit
 
@@ -188,7 +227,15 @@ Trained LoRAs will be saved to `/workspace/training_data/output/`
 
 ### Downloading Additional Models
 
-#### Via ComfyUI Manager (Recommended)
+#### Via Model & Nodes Manager (Recommended)
+
+1. Open Model & Nodes Manager at port 7860
+2. Go to "Download" tab
+3. Paste the model URL from HuggingFace or CivitAI
+4. Select the model type
+5. Click Download
+
+#### Via ComfyUI Manager
 
 1. In ComfyUI, click the "Manager" button
 2. Go to "Install Models"
@@ -282,14 +329,21 @@ nvidia-smi
 
 ### Adding More Custom Nodes
 
-Edit `scripts/install_custom_nodes.sh` and add:
+Custom nodes are now managed through the Model & Nodes Manager UI. To add additional nodes to the one-click installer:
 
+1. Edit `scripts/model_downloader.py`
+2. Add your node to the `CUSTOM_NODES` list:
+   ```python
+   {"name": "YourNodeName", "url": "https://github.com/username/YourNode.git"},
+   ```
+3. Rebuild and push the Docker image
+
+Alternatively, you can manually install nodes via Jupyter:
 ```bash
+cd /workspace/ComfyUI/custom_nodes
 git clone https://github.com/username/CustomNode.git
-cd CustomNode && pip install -r requirements.txt && cd ..
+cd CustomNode && pip install -r requirements.txt
 ```
-
-Rebuild the Docker image.
 
 ### Pre-downloading Specific Models
 
@@ -319,7 +373,8 @@ Place `.json` workflow files in `workflows/` directory before building. They'll 
 
 - **8188**: ComfyUI web interface
 - **8888**: Jupyter Lab
-- **7860**: AI-Toolkit UI (if available)
+- **7860**: Model & Nodes Manager
+- **7861**: AI-Toolkit UI (if available)
 
 ## License
 

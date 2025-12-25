@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set +e  # Never exit on errors - pod must always start!
+
 echo "========================================="
 echo "Starting RunPod ComfyUI Template"
 echo "========================================="
@@ -8,6 +10,17 @@ echo "========================================="
 export PYTHONUNBUFFERED=1
 export PYTORCH_CUDA_ALLOC_CONF=garbage_collection_threshold:0.6,max_split_size_mb:128
 export CUDA_MODULE_LOADING=LAZY
+
+# Run first-time setup if needed (never fails)
+if [ ! -f "/workspace/.setup_complete" ]; then
+    echo ""
+    echo "🚀 First deployment detected - running initial setup..."
+    echo "   This will install all dependencies using RunPod's fast internet"
+    echo "   Services will start even if some dependencies fail to install"
+    echo ""
+    bash /workspace/scripts/first_run_setup.sh || echo "⚠️ Setup had some issues, but continuing to start services..."
+    echo ""
+fi
 
 # Create symbolic link for persistent storage if using RunPod network volume
 if [ -d "/runpod-volume" ] && [ ! -L "/workspace/ComfyUI/models" ]; then
@@ -58,9 +71,9 @@ start_comfyui() {
         &
 }
 
-# Function to start Model Download Manager
+# Function to start Model & Custom Nodes Manager
 start_model_downloader() {
-    echo "Starting Model Download Manager on port 7860..."
+    echo "Starting Model & Custom Nodes Manager on port 7860..."
     cd /workspace/scripts
     python model_downloader.py &
 }
@@ -86,13 +99,13 @@ display_info() {
         # Running on RunPod
         echo "ComfyUI:          https://${RUNPOD_POD_ID}-8188.proxy.runpod.net"
         echo "Jupyter:          https://${RUNPOD_POD_ID}-8888.proxy.runpod.net"
-        echo "Model Downloader: https://${RUNPOD_POD_ID}-7860.proxy.runpod.net"
+        echo "Model & Nodes Manager: https://${RUNPOD_POD_ID}-7860.proxy.runpod.net"
         echo "AI-Toolkit:       https://${RUNPOD_POD_ID}-7861.proxy.runpod.net"
     else
         # Local or other hosting
         echo "ComfyUI:          http://localhost:8188"
         echo "Jupyter:          http://localhost:8888"
-        echo "Model Downloader: http://localhost:7860"
+        echo "Model & Nodes Manager: http://localhost:7860"
         echo "AI-Toolkit:       http://localhost:7861"
     fi
 
@@ -100,12 +113,15 @@ display_info() {
     echo "========================================="
     echo "Quick Start Guide:"
     echo "========================================="
-    echo "1. Access Model Downloader to download checkpoints, LoRAs, and models"
+    echo "1. Access Model & Nodes Manager (port 7860):"
+    echo "   - Install custom nodes with one click!"
+    echo "   - Download checkpoints, LoRAs, and models"
     echo "2. Access ComfyUI to start generating images/videos"
     echo "3. Use Jupyter to upload training images to /workspace/training_data/"
     echo "4. Use AI-Toolkit UI for LoRA training (Flux/SDXL)"
     echo ""
     echo "Models directory: /workspace/ComfyUI/models/"
+    echo "Custom nodes:     /workspace/ComfyUI/custom_nodes/"
     echo "Training data:    /workspace/training_data/"
     echo "AI-Toolkit:       /workspace/ai-toolkit/"
     echo ""
